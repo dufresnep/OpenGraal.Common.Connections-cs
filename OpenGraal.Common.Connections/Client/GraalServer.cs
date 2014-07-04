@@ -569,6 +569,11 @@ namespace OpenGraal.Common.Connections.Client
 			this.Send (keyPacket.Buffer);
 		}
 
+		public virtual void SendLogin (String Account, String Password, String Nickname, String VersionString, bool RC = false)
+		{
+			this.SendLogin (Account, Password, Nickname, VersionString, RC, null);
+		}
+
 		/// <summary>
 		/// Handle Received Data
 		/// </summary>
