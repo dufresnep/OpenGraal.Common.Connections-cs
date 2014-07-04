@@ -519,14 +519,14 @@ namespace OpenGraal.Common.Connections.Client
 			{
 				s.Append (b.ToString ("x2").ToLower ());
 			}
-			string password = s.ToString ();
-			return password;
+			string output = s.ToString ();
+			return output;
 		}
 
 		/// <summary>
-		/// Send Login Information
+		/// Send Login Information with specified or generated keys
 		/// </summary>
-		public virtual void SendLogin (String Account, String Password, String Nickname, String VersionString, bool RC = false)
+		public virtual void SendLogin (String Account, String Password, String Nickname, String VersionString, bool RC = false, String[] keys = null)
 		{
 			//Set the nickname
 			//this.Nickname = Nickname;
@@ -537,21 +537,34 @@ namespace OpenGraal.Common.Connections.Client
 			// Key Packet // GNW03014 // G3D14097 // G3D0208A // GSERV025
 			if (this.isRC)
 			{
-				
+
 				versionInt = 6;
+			}
+
+			if (keys == null)
+			{
+				// If the keys are null, generate the three needed based on environment variables.
+				keys = new String[3] { (Environment.MachineName + Convert.ToString(Environment.OSVersion)),
+										(Environment.ProcessorCount + Environment.UserName),
+										Convert.ToString(Environment.Version)
+									};
+
+				foreach (string k in keys) {
+					Console.WriteLine ("Key Value: " + k);
+				}
 			}
 
 			CString keyPacket = new CString () + (byte)versionInt + (byte)mCodec.Key + versionStr + (byte)Account.Length + Account + (byte)Password.Length + Password + new CString ("win").Tokenize () + ",";
 
 			// Unknown hash.
-			keyPacket += new CString (this.GetMD5Hash ("md5-1")).Tokenize () + ",";
+			keyPacket += new CString (this.GetMD5Hash (keys[0])).Tokenize () + ",";
 
 			// MD5 hash.
-			keyPacket += new CString (this.GetMD5Hash ("md5-2")).Tokenize () + "," + new CString (this.GetMD5Hash ("md5-3")).Tokenize () + ",";
+			keyPacket += new CString (this.GetMD5Hash (keys[1])).Tokenize () + "," + new CString (this.GetMD5Hash (keys[2])).Tokenize () + ",";
 			keyPacket += new CString ("10.4.0  Darwin Kernel Version 10.4.0: Wed Oct 20 20:14:45 PDT 2010; root:xnu-1504.58.28~3/RELEASE_ARM_S5L8930X").Tokenize ();
 			keyPacket += "\n";
 
-			//Console.WriteLine(keyPacket.Text);
+			Console.WriteLine(keyPacket.Text);
 			keyPacket.ZCompress ().PreLength ();
 			this.Send (keyPacket.Buffer);
 		}
@@ -577,6 +590,8 @@ namespace OpenGraal.Common.Connections.Client
 
 				// Read Packet Type
 				int PacketId = CurPacket.ReadGUByte1 ();
+
+				Console.WriteLine ("ID of packet: " + (PacketIn)PacketId);
 
 				// Run Internal Packet Function
 				switch ((PacketIn)PacketId)
@@ -853,7 +868,7 @@ namespace OpenGraal.Common.Connections.Client
 							try
 							{
 							string packetName = Enum.GetName (typeof(PacketIn), PacketId).ToString ();
-							this.WriteText("[" + packetName + "]: " + CurPacket.ReadString().Text + "");
+							//this.WriteText("[" + packetName + "]: " + CurPacket.ReadString().Text + "");
 							}
 							catch (IndexOutOfRangeException e)
 							{
