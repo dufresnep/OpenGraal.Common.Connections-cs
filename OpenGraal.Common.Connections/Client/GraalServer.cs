@@ -7,7 +7,7 @@ using OpenGraal;
 using OpenGraal.Core;
 using OpenGraal.Common;
 using OpenGraal.Common.Players;
-using OpenGraal.Common.Levels;
+//using OpenGraal.Common.Level;
 
 namespace OpenGraal.Common.Connections.Client
 {
